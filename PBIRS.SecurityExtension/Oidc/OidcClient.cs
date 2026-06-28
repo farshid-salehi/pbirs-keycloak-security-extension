@@ -64,8 +64,6 @@ namespace PBIRS.SecurityExtension.Oidc
             string codeVerifier = PkceUtil.GenerateCodeVerifier();
             string codeChallenge = PkceUtil.GenerateCodeChallenge(codeVerifier);
 
-            // We return a tuple-like string that includes the url|code_verifier so callers can later redeem.
-            var sb = new StringBuilder();
             var uri = new UriBuilder(cfg.AuthorizationEndpoint);
             var q = new List<string>
             {
@@ -84,7 +82,7 @@ namespace PBIRS.SecurityExtension.Oidc
             }
 
             uri.Query = string.Join("&", q);
-            // return url and code verifier separated by a pipe so callers can persist the verifier server-side or in a cookie.
+            // return url and code verifier separated by a pipe so callers can later redeem.
             return uri.ToString() + "|" + codeVerifier + "|" + state + "|" + nonce;
         }
 
@@ -186,6 +184,23 @@ namespace PBIRS.SecurityExtension.Oidc
             }
 
             return jwt;
+        }
+
+        /// <summary>
+        /// Build an end-session (logout) URL if the provider exposes one in discovery. Returns null if not available.
+        /// </summary>
+        public async Task<string?> GetEndSessionUrlAsync(string? idTokenHint = null, string? postLogoutRedirectUri = null, string? state = null)
+        {
+            var cfg = await GetConfigurationAsync().ConfigureAwait(false);
+            if (string.IsNullOrEmpty(cfg.EndSessionEndpoint)) return null;
+
+            var uri = new UriBuilder(cfg.EndSessionEndpoint);
+            var parts = new List<string>();
+            if (!string.IsNullOrEmpty(idTokenHint)) parts.Add("id_token_hint=" + Uri.EscapeDataString(idTokenHint));
+            if (!string.IsNullOrEmpty(postLogoutRedirectUri)) parts.Add("post_logout_redirect_uri=" + Uri.EscapeDataString(postLogoutRedirectUri));
+            if (!string.IsNullOrEmpty(state)) parts.Add("state=" + Uri.EscapeDataString(state));
+            uri.Query = string.Join("&", parts);
+            return uri.ToString();
         }
 
         public void Dispose()
