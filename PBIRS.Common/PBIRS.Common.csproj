@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>PBIRS.Common</AssemblyName>
+    <RootNamespace>PBIRS.Common</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
